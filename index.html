@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    .container {
+      border: 1px solid #000;
+    }
+    div {
+      padding: 10px;
+    }
+    .chat-container label {
+      display: block;
+    }
+    .chat-container textarea {
+      border: 1px solid #000;
+    }
+    .chat-container button {
+      display: block;
+    }
+    .chat-response {
+      border: 1px solid #000;
+      padding: 10px;
+      margin-top: 10px;
+      height: 100px;
+      overflow-y: auto;
+      width: 95%;
+    }
+    .main {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+    .main section {
+      min-width: 60%;
+      max-width: 60%;
+      width: 60%;
+    }
+    .main .container {
+      min-width: 30%;
+      max-width: 30%;
+      width: 40%;
+    }
+    @media only screen and (max-width: 600px) {
+      .main {
+        flex-direction: column;
+      }
+      .main section {
+        min-width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        width: calc(100% - 20px);
+      }
+      .main .container {
+        min-width: calc(100% - 20px);
+        max-width: calc(100% - 20px);
+        width: calc(100% - 20px);
+      }
+    }
+    .container textarea {
+      width: 100%;
+    }
+  </style>
+  <body>
+    <div class="container">
+      <h3>Check if LLM is downloaded</h3>
+      <p>
+        You can check if a model is downloaded by going to
+        <code>chrome://on-device-internals/</code>
+      </p>
+      <p>
+        In order to enable the LLM, you need to enable the
+        <code>chrome://flags/#enable-on-device-model-downloading</code> and
+        <code>chrome://flags/#optimization-guide-on-device-model</code> flags.
+      </p>
+      <div class="model-status"></div>
+      <button class="download">Download Model (currently Gemini Nano)</button>
+      <div class="download-progress"><p>Downloaded 0%</p></div>
+    </div>
+    <div class="main">
+      <div class="container">
+        <h3>Chat with the LLM</h3>
+        <div class="chat-container">
+          <label for="chat-input">Ask the LLM:</label>
+          <textarea
+            type="text"
+            class="chat-input"
+            name="chat-input"
+            placeholder="Ask the LLM..."
+          ></textarea>
+          <button class="chat-button">Send</button>
+          <div class="chat-response">Here is the response from the LLM:</div>
+        </div>
+      </div>
+      <section>
+        <h4>Mao Gong ding</h4>
+        <p>
+          The Mao Gong ding takes its name from the Lord (公 gōng) Yin of Mao,
+          who gifted the ding to the King after being appointed to help run
+          state affairs.[3][4] The artifact is 53.8 cm high, 47.9 cm wide,[2]
+          and weighs a total of 34.7 kilograms.[5]
+        </p>
+        <p>
+          The interior surface of the ding is covered in an inscription of 500
+          characters, the longest such inscription known today.[3] The National
+          Palace Museum summarizes its contents:
+        </p>
+        <blockquote>
+          "The inscription text bears witness to the 'King Xuan restoration' in
+          Western Zhou history [i.e. revitalization after the ascension of King
+          Xuan, ending the Gonghe interregnum]. The first part of the text
+          consists of King Xuan's instructions to the Duke of Mao. The middle
+          portion recounts how the King, upon taking the throne, fondly recalled
+          how the King Wen of Zhou and King Wu of Zhou had enjoyed the Mandate
+          of Heaven and established the kingdom, as well as the King's vigilance
+          and apprehension over inheriting the Mandate himself. The latter part
+          lists in detail the generous gifts the King had bestowed upon the Duke
+          of Mao. In closing, the Duke of Mao expresses his gratitude to the
+          King, and presents the ding as an expression thereof for future
+          generations."
+        </blockquote>
+        <h4>History</h4>
+        <p>
+          The Mao Gong ding was excavated in Qishan County, Shaanxi province in
+          1843, during the Daoguang Emperor's reign.[2][3] The famous collector
+          Chen Jieqi (1813–1884) acquired it in 1852. He and his studio made
+          precise rubbings of the inscriptions.[7] In the Xuantong era
+          (1909–1911) Duanfang (1861–1911) bought it from the Chen family.
+        </p>
+        <p>
+          Ye Gongchuo (1881–1968) was presented with the ding by friends bought
+          and presented the tripod to him from the Tianjin Dao Sheng Bank, which
+          had it as a mortgage. During the Second Sino-Japanese War, the Ye
+          family sold it to Chen Yon Ren, a millionaire in Shanghai. In April
+          1946, Chen Yon Ren donated the tripod to the Kuomintang Shanghai
+          Government through a general in their army. In 1949, Chiang Kai-shek
+          and the Kuomintang moved it to Taiwan, where it remains housed at the
+          National Palace Museum.
+        </p>
+      </section>
+    </div>
+  </body>
+  <script>
+    const modelStatus = document.querySelector(".model-status");
+    async function checkModelStatus() {
+      const status = await LanguageModel.availability();
+      modelStatus.innerHTML = `
+            <p>Model download status is <strong>${status}</strong></p>
+        `;
+    }
+    checkModelStatus();
+    const downloadButton = document.querySelector(".download");
+    downloadButton.disabled = modelStatus !== "downloadable";
+    const downloadProgress = document.querySelector(".download-progress");
+    downloadButton.addEventListener("click", async function () {
+      const model = await LanguageModel.create({
+        monitor(m) {
+          m.addEventListener("downloadprogress", (e) => {
+            downloadProgress.innerHTML = `
+                        <p>Downloaded ${e.loaded * 100}%</p>
+                    `;
+          });
+        },
+      });
+    });
+    const textArea = document.querySelector(
+      ".chat-container textarea.chat-input",
+    );
+    const chatButton = document.querySelector(
+      ".chat-container button.chat-button",
+    );
+    const sectionContent = document.querySelector("section").innerHTML;
+    const chatResponse = document.querySelector(
+      ".chat-container .chat-response",
+    );
+    chatButton.addEventListener("click", async function () {
+      chatResponse.innerHTML = `
+            <p>Here is the response from the LLM:</p>
+            <div class="loader">Loading...</div>
+        `;
+      const question = textArea.value;
+      const model = await LanguageModel.create({
+        temperature: 0.7,
+        topK: 40,
+      });
+      const response = await model.prompt(`
+        You are a helpful and friendly assistant.
+        The text content is: ${sectionContent}
+        You are asked to answer the following question: ${question}
+        `);
+
+      chatResponse.innerHTML = `
+            <p>Here is the response from the LLM:</p>
+            <p>${response}</p>
+        `;
+    });
+  </script>
+</html>
